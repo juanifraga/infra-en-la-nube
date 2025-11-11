@@ -247,3 +247,14 @@ resource "aws_s3_bucket_public_access_block" "md_source_public_access" {
 resource "random_id" "bucket_suffix" {
   byte_length = 4
 }
+
+##############################
+# static site module
+##############################
+module "static_site" {
+  source      = "./modules/static_site"
+  bucket_name = "static-site-bucket-642878372863"
+  tags = {
+    Name        = "StaticSiteModule"
+  }
+}

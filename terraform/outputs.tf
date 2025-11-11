@@ -63,3 +63,7 @@ output "db_name" {
   value       = module.comments_db.db_name
   description = "Database name"
 }
+output "url_sitio_estatico" {
+  value = module.static_site.website_url
+  description = "URL static site hosted on CloudFront"
+}
