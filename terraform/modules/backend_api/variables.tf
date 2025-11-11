@@ -3,6 +3,12 @@ variable "name_prefix" {
   type        = string
 }
 
+variable "instance_name_suffix" {
+  description = "Suffix for instance name (e.g., -1, -2)"
+  type        = string
+  default     = ""
+}
+
 variable "instance_type" {
   description = "EC2 instance type"
   type        = string

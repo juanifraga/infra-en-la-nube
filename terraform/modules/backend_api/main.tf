@@ -45,7 +45,7 @@ resource "aws_instance" "backend" {
   user_data = var.db_host != "" ? local.user_data : null
 
   tags = merge(var.tags, {
-    Name      = "${var.name_prefix}-backend-ec2"
+    Name      = "${var.name_prefix}-backend-ec2${var.instance_name_suffix}"
     Component = "Backend API"
     Tier      = "Application"
     ManagedBy = "Terraform"

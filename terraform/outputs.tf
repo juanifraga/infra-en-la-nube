@@ -26,14 +26,24 @@ output "lambda_arn" {
   description = "ARN of the Lambda function"
 }
 
-output "backend_url" {
-  value       = module.backend_api.backend_url
-  description = "Backend API URL"
+output "alb_dns_name" {
+  value       = aws_lb.backend.dns_name
+  description = "DNS name of the Application Load Balancer"
 }
 
-output "backend_public_ip" {
-  value       = module.backend_api.backend_public_ip
-  description = "Public IP of the backend EC2 instance"
+output "backend_url" {
+  value       = "http://${aws_lb.backend.dns_name}"
+  description = "Backend API URL (via Load Balancer)"
+}
+
+output "backend_instance_ips" {
+  value       = [for instance in module.backend_api : instance.backend_public_ip]
+  description = "Public IPs of all backend EC2 instances"
+}
+
+output "backend_instance_ids" {
+  value       = [for instance in module.backend_api : instance.backend_instance_id]
+  description = "Instance IDs of all backend EC2 instances"
 }
 
 output "db_endpoint" {

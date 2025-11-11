@@ -72,3 +72,9 @@ variable "db_password" {
   type        = string
   sensitive   = true
 }
+
+variable "backend_instance_count" {
+  description = "Number of backend EC2 instances to create"
+  type        = number
+  default     = 2
+}
