@@ -1,6 +1,6 @@
 variable "aws_region" {
   type    = string
-  default = "us-east-1"
+  default = "us-east-2"
 }
 
 variable "name_prefix" {
@@ -10,7 +10,7 @@ variable "name_prefix" {
 
 variable "instance_type" {
   type    = string
-  default = "t2.micro"
+  default = "t3.micro"
 }
 
 variable "key_name" {
@@ -35,4 +35,16 @@ variable "tags" {
     "Project" = "Obligatorio2"
     "Owner"   = "Juani"
   }
+}
+
+variable "lambda_interval" {
+  description = "Interval in minutes for the Lambda function to run"
+  type        = number
+  default     = 2
+}
+
+variable "gemini_api_key" {
+  description = "Google Gemini API key for generating articles"
+  type        = string
+  sensitive   = true
 }
