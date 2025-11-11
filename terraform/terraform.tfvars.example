@@ -4,3 +4,12 @@
 
 # Get your Google Gemini API key from: https://aistudio.google.com/app/api-keys
 gemini_api_key = "your-gemini-api-key-here"
+
+# Your public IP address for SSH access (restricts SSH to only your IP)
+allowed_ssh_cidr = "167.62.238.65/32"
+
+# AWS SSH key pair name
+key_name = "docusaurus-key"
+
+# Database password for RDS PostgreSQL
+db_password = "ChangeThisPassword123!"
