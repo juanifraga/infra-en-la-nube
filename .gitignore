@@ -33,3 +33,7 @@ override.tf.json
 *_override.tf.json
 .terraformrc
 terraform.rc
+
+# Python Lambda dependencies (keep only the zip and source files)
+terraform/modules/lambda_generator/lambda/*
+!terraform/modules/lambda_generator/lambda/*.py
