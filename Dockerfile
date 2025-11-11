@@ -1,6 +1,10 @@
 # Stage 1: Build
 FROM node:18-alpine AS builder
 
+# Build argument for backend API URL
+ARG BACKEND_API_URL
+ENV BACKEND_API_URL=${BACKEND_API_URL}
+
 # Establecer directorio de trabajo
 WORKDIR /app
 
