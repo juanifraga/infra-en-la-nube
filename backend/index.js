@@ -1,6 +1,5 @@
 const express = require("express");
 const cors = require("cors");
-const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -8,28 +7,27 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Check if we're using PostgreSQL or SQLite
 const usePostgres = process.env.DB_HOST && process.env.DB_NAME;
 
 let db;
 let pool;
 
-if (usePostgres) {
-  // PostgreSQL setup
-  const { Pool } = require("pg");
-  pool = new Pool({
-    host: process.env.DB_HOST,
-    port: 5432,
-    database: process.env.DB_NAME,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-  });
+const { Pool } = require("pg");
+pool = new Pool({
+  host: process.env.DB_HOST,
+  port: 5432,
+  database: process.env.DB_NAME,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  ssl: {
+    rejectUnauthorized: false,
+  },
+});
 
-  // Initialize PostgreSQL table
-  async function initPostgresDB() {
-    const client = await pool.connect();
-    try {
-      await client.query(`
+async function initPostgresDB() {
+  const client = await pool.connect();
+  try {
+    await client.query(`
         CREATE TABLE IF NOT EXISTS comments (
           id SERIAL PRIMARY KEY,
           name VARCHAR(255) NOT NULL,
@@ -38,31 +36,15 @@ if (usePostgres) {
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
-      console.log("PostgreSQL database initialized successfully");
-    } catch (error) {
-      console.error("Error initializing PostgreSQL database:", error);
-    } finally {
-      client.release();
-    }
+    console.log("PostgreSQL database initialized successfully");
+  } catch (error) {
+    console.error("Error initializing PostgreSQL database:", error);
+  } finally {
+    client.release();
   }
-
-  initPostgresDB();
-} else {
-  // SQLite setup
-  const Database = require("better-sqlite3");
-  db = new Database(path.join(__dirname, "comments.db"));
-
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS comments (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      email TEXT NOT NULL,
-      comment TEXT NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-  console.log("SQLite database initialized successfully");
 }
+
+initPostgresDB();
 
 app.get("/comments", async (req, res) => {
   try {
@@ -146,27 +128,17 @@ app.post("/comments", async (req, res) => {
 
 app.get("/health", async (req, res) => {
   try {
-    if (usePostgres) {
-      await pool.query("SELECT 1");
-      res.json({
-        status: "ok",
-        database: "postgresql",
-        connected: true,
-        timestamp: new Date().toISOString(),
-      });
-    } else {
-      db.prepare("SELECT 1").get();
-      res.json({
-        status: "ok",
-        database: "sqlite",
-        connected: true,
-        timestamp: new Date().toISOString(),
-      });
-    }
+    await pool.query("SELECT 1");
+    res.json({
+      status: "ok",
+      database: "postgresql",
+      connected: true,
+      timestamp: new Date().toISOString(),
+    });
   } catch (error) {
     res.status(500).json({
       status: "error",
-      database: usePostgres ? "postgresql" : "sqlite",
+      database: "postgresql",
       connected: false,
       timestamp: new Date().toISOString(),
     });
@@ -175,7 +147,7 @@ app.get("/health", async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
-  console.log(`Database: ${usePostgres ? "PostgreSQL" : "SQLite"}`);
+  console.log(`Database: postgresql`);
   console.log(`Available endpoints:`);
   console.log(`  GET  /comments - Get all comments`);
   console.log(`  POST /comments - Create a new comment`);
