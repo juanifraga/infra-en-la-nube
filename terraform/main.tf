@@ -20,14 +20,12 @@ provider "aws" {
 # Módulo: Frontend
 ##############################
 
-module "web_ec2" {
-  source           = "./modules/web_ec2"
-  name_prefix      = var.name_prefix
-  instance_type    = var.instance_type
-  key_name         = var.key_name
-  allowed_ssh_cidr = var.allowed_ssh_cidr
-  docker_image     = var.docker_image
-  tags             = var.tags
+module "cloudfront_frontend" {
+  source = "./modules/cloudfront_frontend"
+
+  name_prefix        = var.name_prefix
+  backend_alb_domain = aws_lb.backend.dns_name
+  tags               = var.tags
 }
 
 ##############################

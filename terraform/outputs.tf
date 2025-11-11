@@ -1,9 +1,16 @@
-output "public_ip" {
-  value = module.web_ec2.public_ip
+output "cloudfront_url" {
+  value       = module.cloudfront_frontend.cloudfront_url
+  description = "CloudFront URL to access the web application"
 }
 
-output "web_url" {
-  value = "http://${module.web_ec2.public_ip}"
+output "cloudfront_distribution_id" {
+  value       = module.cloudfront_frontend.cloudfront_distribution_id
+  description = "CloudFront distribution ID for cache invalidation"
+}
+
+output "frontend_bucket_name" {
+  value       = module.cloudfront_frontend.bucket_name
+  description = "S3 bucket name for frontend deployment"
 }
 
 output "bucket_name" {

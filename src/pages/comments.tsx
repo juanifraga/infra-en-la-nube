@@ -14,8 +14,7 @@ interface Comment {
 }
 
 export default function Comments(): React.ReactElement {
-  const { siteConfig } = useDocusaurusContext();
-  const API_URL = siteConfig.customFields.backendApiUrl as string;
+  const API_URL = "/api";
 
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
