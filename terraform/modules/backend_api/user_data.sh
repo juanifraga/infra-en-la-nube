@@ -15,6 +15,11 @@ apt-get install -y git
 # Install PostgreSQL client
 apt-get install -y postgresql-client
 
+# Install CloudWatch Agent
+wget https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb
+dpkg -i -E ./amazon-cloudwatch-agent.deb
+rm amazon-cloudwatch-agent.deb
+
 # Create app directory
 mkdir -p /opt/backend
 cd /opt/backend
@@ -198,9 +203,98 @@ RestartSec=10
 WantedBy=multi-user.target
 EOF
 
+# Get instance ID for CloudWatch configuration
+INSTANCE_ID=$(ec2-metadata --instance-id | cut -d " " -f 2)
+
+# Configure CloudWatch Agent
+cat > /opt/aws/amazon-cloudwatch-agent/etc/config.json <<CWCONFIG
+{
+  "logs": {
+    "logs_collected": {
+      "files": {
+        "collect_list": [
+          {
+            "file_path": "/var/log/syslog",
+            "log_group_name": "${log_group_name}",
+            "log_stream_name": "$INSTANCE_ID/syslog",
+            "timezone": "UTC"
+          },
+          {
+            "file_path": "/var/log/backend-app.log",
+            "log_group_name": "${log_group_name}",
+            "log_stream_name": "$INSTANCE_ID/application",
+            "timezone": "UTC"
+          }
+        ]
+      }
+    }
+  },
+  "metrics": {
+    "namespace": "BackendAPI",
+    "metrics_collected": {
+      "mem": {
+        "measurement": [
+          {
+            "name": "mem_used_percent",
+            "rename": "MemoryUtilization",
+            "unit": "Percent"
+          }
+        ],
+        "metrics_collection_interval": 60
+      },
+      "disk": {
+        "measurement": [
+          {
+            "name": "used_percent",
+            "rename": "DiskUtilization",
+            "unit": "Percent"
+          }
+        ],
+        "metrics_collection_interval": 60,
+        "resources": [
+          "*"
+        ]
+      }
+    }
+  }
+}
+CWCONFIG
+
+# Update systemd service to log to file
+cat > /etc/systemd/system/backend.service <<'EOF'
+[Unit]
+Description=Backend API Service
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/opt/backend
+EnvironmentFile=/opt/backend/.env
+ExecStart=/usr/bin/node index.js
+Restart=always
+RestartSec=10
+StandardOutput=append:/var/log/backend-app.log
+StandardError=append:/var/log/backend-app.log
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Create log file with proper permissions
+touch /var/log/backend-app.log
+chown ubuntu:ubuntu /var/log/backend-app.log
+
 # Enable and start service
 systemctl daemon-reload
 systemctl enable backend.service
 systemctl start backend.service
 
-echo "Backend setup complete!"
+# Start CloudWatch Agent
+/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+  -a fetch-config \
+  -m ec2 \
+  -s \
+  -c file:/opt/aws/amazon-cloudwatch-agent/etc/config.json
+
+echo "Backend setup complete with CloudWatch Logs!"

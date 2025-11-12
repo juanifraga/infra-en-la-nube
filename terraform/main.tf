@@ -5,7 +5,7 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
-     random = {
+    random = {
       source  = "hashicorp/random"
       version = "~> 3.0"
     }
@@ -201,20 +201,19 @@ resource "aws_lb_listener" "backend" {
 
 # Create database module (uses backend SG ID)
 module "comments_db" {
-  source                     = "./modules/comments_db"
-  name_prefix                = var.name_prefix
-  db_instance_class          = var.db_instance_class
-  db_name                    = var.db_name
-  db_username                = var.db_username
-  db_password                = var.db_password
-  allowed_security_group_id  = aws_security_group.backend_api_sg.id
-  tags                       = var.tags
+  source                    = "./modules/comments_db"
+  name_prefix               = var.name_prefix
+  db_instance_class         = var.db_instance_class
+  db_name                   = var.db_name
+  db_username               = var.db_username
+  db_password               = var.db_password
+  allowed_security_group_id = aws_security_group.backend_api_sg.id
+  tags                      = var.tags
 }
 
 module "backend_api" {
-  source   = "./modules/backend_api"
-  count    = var.backend_instance_count
-
+  source               = "./modules/backend_api"
+  count                = var.backend_instance_count
   name_prefix          = var.name_prefix
   instance_name_suffix = "-${count.index + 1}"
   instance_type        = var.instance_type
@@ -245,7 +244,7 @@ resource "aws_s3_bucket" "md_source" {
   force_destroy = true
 
   tags = {
-    Name        = "SourceMarkdownBucket"
+    Name = "SourceMarkdownBucket"
   }
 }
 
@@ -270,7 +269,7 @@ module "static_site" {
   source      = "./modules/static_site"
   bucket_name = "static-site-bucket-642878372863"
   tags = {
-    Name        = "StaticSiteModule"
+    Name = "StaticSiteModule"
   }
 }
 ##############################
@@ -288,19 +287,19 @@ resource "aws_sns_topic_subscription" "alerta_email" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "alarma_instancia_caida" {
-  alarm_name                = "${var.name_prefix}-instancia-backend-caida"
-  comparison_operator       = "GreaterThanOrEqualToThreshold"
-  evaluation_periods        = 2 # Que esté caída por 2 minutos seguidos
-  metric_name               = "UnHealthyHostCount"
-  namespace                 = "AWS/ApplicationELB"
-  period                    = 60 # Evaluar cada 60 segundos
-  statistic                 = "Maximum" 
-  threshold                 = 1       # Disparar si 1 o más instancias están caídas
-  alarm_description         = "Alarma cuando al menos una instancia de Docusaurus falla el health check."
+  alarm_name          = "${var.name_prefix}-instancia-backend-caida"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = 2 # Que esté caída por 2 minutos seguidos
+  metric_name         = "UnHealthyHostCount"
+  namespace           = "AWS/ApplicationELB"
+  period              = 60 # Evaluar cada 60 segundos
+  statistic           = "Maximum"
+  threshold           = 1 # Disparar si 1 o más instancias están caídas
+  alarm_description   = "Alarma cuando al menos una instancia de Docusaurus falla el health check."
 
   dimensions = {
-    LoadBalancer = aws_lb.backend.arn_suffix     
-    TargetGroup  = aws_lb_target_group.backend.arn_suffix 
+    LoadBalancer = aws_lb.backend.arn_suffix
+    TargetGroup  = aws_lb_target_group.backend.arn_suffix
   }
 
   # Acción: Enviar un mensaje al tema SNS

@@ -74,6 +74,23 @@ output "db_name" {
   description = "Database name"
 }
 output "url_sitio_estatico" {
-  value = module.static_site.website_url
+  value       = module.static_site.website_url
   description = "URL static site hosted on CloudFront"
 }
+
+# CloudWatch Logs outputs
+output "backend_log_group_name" {
+  value       = [for instance in module.backend_api : instance.cloudwatch_log_group_name]
+  description = "CloudWatch Log Group names for backend instances"
+}
+
+output "lambda_generator_log_group_name" {
+  value       = module.lambda_generator.cloudwatch_log_group_name
+  description = "CloudWatch Log Group name for Article Generator Lambda"
+}
+
+# Note: docusaurus_rebuild module doesn't have CloudWatch logs configured yet
+# output "lambda_rebuild_log_group_name" {
+#   value       = module.docusaurus_rebuild.log_group_name
+#   description = "CloudWatch Log Group name for Docusaurus Rebuild Lambda"
+# }
