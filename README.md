@@ -26,9 +26,19 @@ terraform apply
 ### 3. Deploy Frontend
 
 ```bash
+cd ..
 ./deploy-to-s3.sh
 ```
 
 ## Access
 
 - **Frontend**: `https://<cloudfront-domain>` (se ve luego del deployment)
+
+
+
+### 2. Destruir infraestrctura
+
+```bash
+cd terraform
+terraform destroy
+```
