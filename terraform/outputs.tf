@@ -73,28 +73,7 @@ output "db_name" {
   value       = module.comments_db.db_name
   description = "Database name"
 }
-
 output "url_sitio_estatico" {
-  value       = module.static_site.website_url
+  value = module.static_site.website_url
   description = "URL static site hosted on CloudFront"
-}
-
-# CloudWatch Logs Outputs
-output "backend_cloudwatch_log_group" {
-  value       = aws_cloudwatch_log_group.backend_logs.name
-  description = "CloudWatch Log Group for Backend API logs"
-}
-
-output "lambda_cloudwatch_log_group" {
-  value       = module.lambda_generator.cloudwatch_log_group_name
-  description = "CloudWatch Log Group for Lambda Generator logs"
-}
-
-output "cloudwatch_logs_info" {
-  value = {
-    backend_log_group = aws_cloudwatch_log_group.backend_logs.name
-    lambda_log_group  = module.lambda_generator.cloudwatch_log_group_name
-    region            = var.aws_region
-  }
-  description = "CloudWatch Logs information for monitoring"
 }

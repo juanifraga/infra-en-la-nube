@@ -9,42 +9,11 @@ apt-get upgrade -y
 curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
 apt-get install -y nodejs
 
-# Install git and other tools
-apt-get install -y git jq
+# Install git
+apt-get install -y git
 
 # Install PostgreSQL client
 apt-get install -y postgresql-client
-
-# Install CloudWatch Agent
-wget https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb
-dpkg -i amazon-cloudwatch-agent.deb
-
-# Create CloudWatch Agent configuration
-cat > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json <<'CWEOF'
-{
-  "logs": {
-    "logs_collected": {
-      "files": {
-        "collect_list": [
-          {
-            "file_path": "/var/log/backend-api.log",
-            "log_group_name": "${log_group_name}",
-            "log_stream_name": "{instance_id}/backend-api",
-            "timestamp_format": "%Y-%m-%dT%H:%M:%S.%fZ"
-          }
-        ]
-      }
-    }
-  }
-}
-CWEOF
-
-# Start CloudWatch Agent
-/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
-  -a fetch-config \
-  -m ec2 \
-  -s \
-  -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
 
 # Create app directory
 mkdir -p /opt/backend
@@ -67,31 +36,16 @@ cat > package.json <<'EOF'
 }
 EOF
 
-cat > index.js <<'JSEOF'
+cat > index.js <<'EOF'
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
-const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
-
-// Helper function for logging
-function logAction(action, details) {
-  const logEntry = {
-    timestamp: new Date().toISOString(),
-    action: action,
-    ...details
-  };
-  const logLine = JSON.stringify(logEntry) + '\n';
-  console.log(logLine.trim());
-  
-  // Also write to file for CloudWatch
-  fs.appendFileSync('/var/log/backend-api.log', logLine);
-}
 
 // PostgreSQL connection
 const pool = new Pool({
@@ -118,9 +72,9 @@ async function initDB() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
-    logAction('DATABASE_INITIALIZED', { status: 'success' });
+    console.log('Database initialized successfully');
   } catch (error) {
-    logAction('DATABASE_INIT_ERROR', { error: error.message });
+    console.error('Error initializing database:', error);
   } finally {
     client.release();
   }
@@ -130,35 +84,14 @@ initDB();
 
 // GET /comments - Get all comments
 app.get('/comments', async (req, res) => {
-  const startTime = Date.now();
   try {
-    logAction('GET_COMMENTS_REQUEST', {
-      method: 'GET',
-      endpoint: '/comments',
-      ip: req.ip
-    });
-
     const result = await pool.query('SELECT * FROM comments ORDER BY created_at DESC');
-    
-    logAction('GET_COMMENTS_SUCCESS', {
-      method: 'GET',
-      endpoint: '/comments',
-      count: result.rows.length,
-      duration_ms: Date.now() - startTime
-    });
-
     res.json({
       success: true,
       data: result.rows,
       count: result.rows.length
     });
   } catch (error) {
-    logAction('GET_COMMENTS_ERROR', {
-      method: 'GET',
-      endpoint: '/comments',
-      error: error.message,
-      duration_ms: Date.now() - startTime
-    });
     console.error('Error fetching comments:', error);
     res.status(500).json({
       success: false,
@@ -169,26 +102,10 @@ app.get('/comments', async (req, res) => {
 
 // POST /comments - Create a comment
 app.post('/comments', async (req, res) => {
-  const startTime = Date.now();
   try {
     const { name, email, comment } = req.body;
 
-    logAction('POST_COMMENT_REQUEST', {
-      method: 'POST',
-      endpoint: '/comments',
-      ip: req.ip,
-      has_name: !!name,
-      has_email: !!email,
-      has_comment: !!comment
-    });
-
     if (!name || !email || !comment) {
-      logAction('POST_COMMENT_VALIDATION_ERROR', {
-        method: 'POST',
-        endpoint: '/comments',
-        error: 'Missing required fields',
-        duration_ms: Date.now() - startTime
-      });
       return res.status(400).json({
         success: false,
         error: 'Name, email, and comment are required'
@@ -197,12 +114,6 @@ app.post('/comments', async (req, res) => {
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      logAction('POST_COMMENT_VALIDATION_ERROR', {
-        method: 'POST',
-        endpoint: '/comments',
-        error: 'Invalid email format',
-        duration_ms: Date.now() - startTime
-      });
       return res.status(400).json({
         success: false,
         error: 'Invalid email format'
@@ -214,25 +125,12 @@ app.post('/comments', async (req, res) => {
       [name, email, comment]
     );
 
-    logAction('POST_COMMENT_SUCCESS', {
-      method: 'POST',
-      endpoint: '/comments',
-      comment_id: result.rows[0].id,
-      duration_ms: Date.now() - startTime
-    });
-
     res.status(201).json({
       success: true,
       data: result.rows[0],
       message: 'Comment created successfully'
     });
   } catch (error) {
-    logAction('POST_COMMENT_ERROR', {
-      method: 'POST',
-      endpoint: '/comments',
-      error: error.message,
-      duration_ms: Date.now() - startTime
-    });
     console.error('Error creating comment:', error);
     res.status(500).json({
       success: false,
@@ -260,18 +158,13 @@ app.get('/health', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  logAction('SERVER_STARTED', {
-    port: PORT,
-    environment: 'production',
-    nodejs_version: process.version
-  });
   console.log(`Server is running on port $${PORT}`);
   console.log(`Available endpoints:`);
   console.log(`  GET  /comments - Get all comments`);
   console.log(`  POST /comments - Create a new comment`);
   console.log(`  GET  /health   - Health check`);
 });
-JSEOF
+EOF
 
 # Create environment file
 cat > .env <<EOF
@@ -282,11 +175,6 @@ DB_USER=${db_user}
 DB_PASSWORD=${db_password}
 PORT=3000
 EOF
-
-# Create log file with proper permissions
-touch /var/log/backend-api.log
-chown ubuntu:ubuntu /var/log/backend-api.log
-chmod 644 /var/log/backend-api.log
 
 # Install dependencies
 npm install
@@ -315,4 +203,4 @@ systemctl daemon-reload
 systemctl enable backend.service
 systemctl start backend.service
 
-echo "Backend setup complete with CloudWatch logging enabled!"
+echo "Backend setup complete!"

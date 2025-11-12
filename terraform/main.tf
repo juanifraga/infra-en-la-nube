@@ -5,7 +5,7 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
-    random = {
+     random = {
       source  = "hashicorp/random"
       version = "~> 3.0"
     }
@@ -201,97 +201,25 @@ resource "aws_lb_listener" "backend" {
 
 # Create database module (uses backend SG ID)
 module "comments_db" {
-  source                    = "./modules/comments_db"
-  name_prefix               = var.name_prefix
-  db_instance_class         = var.db_instance_class
-  db_name                   = var.db_name
-  db_username               = var.db_username
-  db_password               = var.db_password
-  allowed_security_group_id = aws_security_group.backend_api_sg.id
-  tags                      = var.tags
+  source                     = "./modules/comments_db"
+  name_prefix                = var.name_prefix
+  db_instance_class          = var.db_instance_class
+  db_name                    = var.db_name
+  db_username                = var.db_username
+  db_password                = var.db_password
+  allowed_security_group_id  = aws_security_group.backend_api_sg.id
+  tags                       = var.tags
 }
-
-# CloudWatch Log Group for Backend (shared)
-resource "aws_cloudwatch_log_group" "backend_logs" {
-  name              = "/aws/ec2/${var.name_prefix}-backend-api"
-  retention_in_days = 7
-
-  tags = merge(var.tags, {
-    Name      = "${var.name_prefix}-backend-logs"
-    Component = "Backend API Logs"
-  })
-}
-
-# IAM Role for EC2 instances (shared)
-resource "aws_iam_role" "backend_role" {
-  name = "${var.name_prefix}-backend-ec2-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Principal = {
-        Service = "ec2.amazonaws.com"
-      }
-      Action = "sts:AssumeRole"
-    }]
-  })
-
-  tags = merge(var.tags, {
-    Name = "${var.name_prefix}-backend-ec2-role"
-  })
-}
-
-# IAM Policy for CloudWatch Logs (shared)
-resource "aws_iam_role_policy" "backend_cloudwatch_policy" {
-  name = "${var.name_prefix}-backend-cloudwatch-policy"
-  role = aws_iam_role.backend_role.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "logs:CreateLogGroup",
-          "logs:CreateLogStream",
-          "logs:PutLogEvents",
-          "logs:DescribeLogStreams"
-        ]
-        Resource = [
-          "${aws_cloudwatch_log_group.backend_logs.arn}",
-          "${aws_cloudwatch_log_group.backend_logs.arn}:*"
-        ]
-      }
-    ]
-  })
-}
-
-# Instance Profile (shared)
-resource "aws_iam_instance_profile" "backend_profile" {
-  name = "${var.name_prefix}-backend-profile"
-  role = aws_iam_role.backend_role.name
-
-  tags = merge(var.tags, {
-    Name = "${var.name_prefix}-backend-profile"
-  })
-}
-
-# Get current region
-data "aws_region" "current" {}
 
 module "backend_api" {
-  source = "./modules/backend_api"
-  count  = var.backend_instance_count
+  source   = "./modules/backend_api"
+  count    = var.backend_instance_count
 
   name_prefix          = var.name_prefix
   instance_name_suffix = "-${count.index + 1}"
   instance_type        = var.instance_type
   key_name             = var.key_name
   security_group_id    = aws_security_group.backend_api_sg.id
-  iam_instance_profile = aws_iam_instance_profile.backend_profile.name
-  cloudwatch_log_group = aws_cloudwatch_log_group.backend_logs.name
-  aws_region           = data.aws_region.current.name
   db_host              = module.comments_db.db_address
   db_port              = module.comments_db.db_port
   db_name              = var.db_name
@@ -299,7 +227,7 @@ module "backend_api" {
   db_password          = var.db_password
   tags                 = var.tags
 
-  depends_on = [module.comments_db, aws_iam_instance_profile.backend_profile]
+  depends_on = [module.comments_db]
 }
 
 resource "aws_lb_target_group_attachment" "backend" {
@@ -317,7 +245,7 @@ resource "aws_s3_bucket" "md_source" {
   force_destroy = true
 
   tags = {
-    Name = "SourceMarkdownBucket"
+    Name        = "SourceMarkdownBucket"
   }
 }
 
@@ -342,6 +270,6 @@ module "static_site" {
   source      = "./modules/static_site"
   bucket_name = "static-site-bucket-642878372863"
   tags = {
-    Name = "StaticSiteModule"
+    Name        = "StaticSiteModule"
   }
 }
