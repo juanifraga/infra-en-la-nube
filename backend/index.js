@@ -7,6 +7,16 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
+// Helper function for logging
+function logAction(action, details) {
+  const logEntry = {
+    timestamp: new Date().toISOString(),
+    action: action,
+    ...details
+  };
+  console.log(JSON.stringify(logEntry));
+}
+
 const usePostgres = process.env.DB_HOST && process.env.DB_NAME;
 
 let db;
@@ -47,11 +57,26 @@ async function initPostgresDB() {
 initPostgresDB();
 
 app.get("/comments", async (req, res) => {
+  const startTime = Date.now();
   try {
+    logAction("GET_COMMENTS_REQUEST", {
+      method: "GET",
+      endpoint: "/comments",
+      ip: req.ip
+    });
+
     if (usePostgres) {
       const result = await pool.query(
         "SELECT * FROM comments ORDER BY created_at DESC"
       );
+      
+      logAction("GET_COMMENTS_SUCCESS", {
+        method: "GET",
+        endpoint: "/comments",
+        count: result.rows.length,
+        duration_ms: Date.now() - startTime
+      });
+
       res.json({
         success: true,
         data: result.rows,
@@ -61,6 +86,14 @@ app.get("/comments", async (req, res) => {
       const comments = db
         .prepare("SELECT * FROM comments ORDER BY created_at DESC")
         .all();
+      
+      logAction("GET_COMMENTS_SUCCESS", {
+        method: "GET",
+        endpoint: "/comments",
+        count: comments.length,
+        duration_ms: Date.now() - startTime
+      });
+
       res.json({
         success: true,
         data: comments,
@@ -68,6 +101,12 @@ app.get("/comments", async (req, res) => {
       });
     }
   } catch (error) {
+    logAction("GET_COMMENTS_ERROR", {
+      method: "GET",
+      endpoint: "/comments",
+      error: error.message,
+      duration_ms: Date.now() - startTime
+    });
     console.error("Error fetching comments:", error);
     res.status(500).json({
       success: false,
@@ -77,10 +116,26 @@ app.get("/comments", async (req, res) => {
 });
 
 app.post("/comments", async (req, res) => {
+  const startTime = Date.now();
   try {
     const { name, email, comment } = req.body;
 
+    logAction("POST_COMMENT_REQUEST", {
+      method: "POST",
+      endpoint: "/comments",
+      ip: req.ip,
+      has_name: !!name,
+      has_email: !!email,
+      has_comment: !!comment
+    });
+
     if (!name || !email || !comment) {
+      logAction("POST_COMMENT_VALIDATION_ERROR", {
+        method: "POST",
+        endpoint: "/comments",
+        error: "Missing required fields",
+        duration_ms: Date.now() - startTime
+      });
       return res.status(400).json({
         success: false,
         error: "Name, email, and comment are required",
@@ -89,6 +144,12 @@ app.post("/comments", async (req, res) => {
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
+      logAction("POST_COMMENT_VALIDATION_ERROR", {
+        method: "POST",
+        endpoint: "/comments",
+        error: "Invalid email format",
+        duration_ms: Date.now() - startTime
+      });
       return res.status(400).json({
         success: false,
         error: "Invalid email format",
@@ -112,12 +173,25 @@ app.post("/comments", async (req, res) => {
         .get(result.lastInsertRowid);
     }
 
+    logAction("POST_COMMENT_SUCCESS", {
+      method: "POST",
+      endpoint: "/comments",
+      comment_id: newComment.id,
+      duration_ms: Date.now() - startTime
+    });
+
     res.status(201).json({
       success: true,
       data: newComment,
       message: "Comment created successfully",
     });
   } catch (error) {
+    logAction("POST_COMMENT_ERROR", {
+      method: "POST",
+      endpoint: "/comments",
+      error: error.message,
+      duration_ms: Date.now() - startTime
+    });
     console.error("Error creating comment:", error);
     res.status(500).json({
       success: false,

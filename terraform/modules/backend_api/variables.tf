@@ -26,6 +26,21 @@ variable "security_group_id" {
   default     = ""
 }
 
+variable "iam_instance_profile" {
+  description = "IAM instance profile name to attach to the instance"
+  type        = string
+}
+
+variable "cloudwatch_log_group" {
+  description = "CloudWatch log group name for logging"
+  type        = string
+}
+
+variable "aws_region" {
+  description = "AWS region for CloudWatch Agent"
+  type        = string
+}
+
 variable "db_host" {
   description = "Database host address"
   type        = string
@@ -43,10 +58,10 @@ variable "db_name" {
   type        = string
 }
 
-variable "allowed_ssh_cidr" { 
+variable "allowed_ssh_cidr" {
   description = "Allowed CIDR for SSH access"
-  type = string 
-  default = "0.0.0.0/0"
+  type        = string
+  default     = "0.0.0.0/0"
 }
 
 variable "db_username" {
@@ -65,3 +80,4 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+

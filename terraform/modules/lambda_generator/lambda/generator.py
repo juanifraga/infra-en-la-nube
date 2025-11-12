@@ -112,9 +112,13 @@ def lambda_handler(event, context):
     topic = random.choice(ANIMAL_TOPICS)
     author = random.choice(AUTHORS)
     
+    print(f"[INFO] Starting article generation - Topic: {topic}, Author: {author}")
+    
     try:
         # Generate article using Gemini AI
+        print("[INFO] Calling Gemini API to generate article content...")
         article_data = generate_article_with_gemini(topic)
+        print(f"[INFO] Article generated successfully - Title: {article_data.get('title', 'Untitled')}")
         
         now = datetime.datetime.utcnow()
         timestamp = now.strftime("%Y%m%d_%H%M%S")
@@ -131,6 +135,8 @@ def lambda_handler(event, context):
         # Calculate estimated reading time (assuming 200 words per minute)
         word_count = len(article_data.get('content', '').split())
         reading_time = max(1, word_count // 200)
+        
+        print(f"[INFO] Article metadata - Words: {word_count}, Reading time: {reading_time} min, Tags: {tags}")
         
         # Create the markdown content
         content = f"""---
@@ -164,12 +170,15 @@ generated: true
 """
         
         # Upload to S3
+        print(f"[INFO] Uploading file to S3 - Bucket: {bucket}, Key: {filename}")
         s3.put_object(
             Bucket=bucket,
             Key=filename,
             Body=content.encode('utf-8'),
             ContentType='text/markdown'
         )
+        
+        print(f"[SUCCESS] File created successfully in S3 - Filename: {filename}, Size: {len(content)} bytes")
         
         return {
             'statusCode': 200,
@@ -178,15 +187,21 @@ generated: true
                 'article_title': title,
                 'author': author,
                 'topic': topic,
-                'word_count': word_count
+                'word_count': word_count,
+                'bucket': bucket,
+                'file_size_bytes': len(content)
             })
         }
         
     except Exception as e:
-        print(f"Error generating article: {str(e)}")
+        error_msg = str(e)
+        print(f"[ERROR] Failed to generate article - Error: {error_msg}")
+        print(f"[ERROR] Topic: {topic}, Author: {author}")
         return {
             'statusCode': 500,
             'body': json.dumps({
-                'error': str(e)
+                'error': error_msg,
+                'topic': topic,
+                'author': author
             })
         }
