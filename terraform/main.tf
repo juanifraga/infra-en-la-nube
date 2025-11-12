@@ -40,6 +40,21 @@ module "lambda_generator" {
 }
 
 ##############################
+# Módulo: Docusaurus Auto-Rebuild
+##############################
+module "docusaurus_rebuild" {
+  source = "./modules/docusaurus_rebuild"
+
+  name_prefix                = var.name_prefix
+  source_bucket_name         = aws_s3_bucket.md_source.id
+  destination_bucket_name    = module.cloudfront_frontend.bucket_name
+  cloudfront_distribution_id = module.cloudfront_frontend.cloudfront_distribution_id
+  github_repo_url            = var.github_repo_url
+  github_branch              = var.github_branch
+  tags                       = var.tags
+}
+
+##############################
 # Módulo: Backend Infrastructure
 ##############################
 

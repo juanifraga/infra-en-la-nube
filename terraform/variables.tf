@@ -38,7 +38,7 @@ variable "tags" {
 }
 
 variable "lambda_interval" {
-  description = "Interval in minutes for the Lambda function to run"
+  description = "Interval in minutes for the article generator Lambda function to run"
   type        = number
   default     = 2
 }
@@ -87,4 +87,16 @@ variable "notification_email" {
     condition     = can(regex("^[^@]+@[^@]+\\.[^@]{2,}$", var.notification_email))
     error_message = "Debe ser una dirección de email válida."
   }
+}
+
+variable "github_repo_url" {
+  description = "GitHub repository URL for the Docusaurus project"
+  type        = string
+  default = "https://github.com/juanifraga/infra-en-la-nube"
+}
+
+variable "github_branch" {
+  description = "GitHub branch to build from"
+  type        = string
+  default     = "main"
 }

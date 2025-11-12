@@ -78,9 +78,9 @@ const config: Config = {
     // Replace with your project's social card
     image: "img/docusaurus-social-card.jpg",
     navbar: {
-      title: "My Site",
+      title: "Obligatorio IN1",
       logo: {
-        alt: "My Site Logo",
+        alt: "Obligatorio IN1 Logo",
         src: "img/logo.svg",
       },
       items: [
@@ -88,7 +88,7 @@ const config: Config = {
           type: "docSidebar",
           sidebarId: "tutorialSidebar",
           position: "left",
-          label: "Tutorial",
+          label: "Articles",
         },
         { to: "/blog", label: "Blog", position: "left" },
         { to: "/comments", label: "Comments", position: "left" },
