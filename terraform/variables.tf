@@ -78,3 +78,13 @@ variable "backend_instance_count" {
   type        = number
   default     = 2
 }
+
+variable "notification_email" {
+  description = "El email para recibir alertas de infraestructura"
+  type        = string
+  
+  validation {
+    condition     = can(regex("^[^@]+@[^@]+\\.[^@]{2,}$", var.notification_email))
+    error_message = "Debe ser una dirección de email válida."
+  }
+}

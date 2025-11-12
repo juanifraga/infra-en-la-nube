@@ -13,3 +13,6 @@ key_name = "docusaurus-key"
 
 # Database password for RDS PostgreSQL
 db_password = "ChangeThisPassword123!"
+
+# Email for infrastructure notifications
+notification_email = "exampleEmail@gmail.com"

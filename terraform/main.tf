@@ -258,3 +258,39 @@ module "static_site" {
     Name        = "StaticSiteModule"
   }
 }
+##############################
+# Alerts via SNS
+##############################
+resource "aws_sns_topic" "alertas" {
+  name = "${var.name_prefix}-alertas-topic"
+  tags = var.tags
+}
+
+resource "aws_sns_topic_subscription" "alerta_email" {
+  topic_arn = aws_sns_topic.alertas.arn
+  protocol  = "email"
+  endpoint  = var.notification_email
+}
+
+resource "aws_cloudwatch_metric_alarm" "alarma_instancia_caida" {
+  alarm_name                = "${var.name_prefix}-instancia-backend-caida"
+  comparison_operator       = "GreaterThanOrEqualToThreshold"
+  evaluation_periods        = 2 # Que esté caída por 2 minutos seguidos
+  metric_name               = "UnHealthyHostCount"
+  namespace                 = "AWS/ApplicationELB"
+  period                    = 60 # Evaluar cada 60 segundos
+  statistic                 = "Maximum" 
+  threshold                 = 1       # Disparar si 1 o más instancias están caídas
+  alarm_description         = "Alarma cuando al menos una instancia de Docusaurus falla el health check."
+
+  dimensions = {
+    LoadBalancer = aws_lb.backend.arn_suffix     
+    TargetGroup  = aws_lb_target_group.backend.arn_suffix 
+  }
+
+  # Acción: Enviar un mensaje al tema SNS
+  alarm_actions = [aws_sns_topic.alertas.arn]
+  ok_actions    = [aws_sns_topic.alertas.arn] # Notifica también cuando se resuelva
+
+  tags = var.tags
+}
