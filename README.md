@@ -23,7 +23,7 @@ terraform init
 terraform apply
 ```
 
-### 2. Deploy Frontend
+### 3. Deploy Frontend
 
 ```bash
 ./deploy-to-s3.sh
