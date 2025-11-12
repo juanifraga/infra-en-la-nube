@@ -23,14 +23,24 @@ output "bucket_arn" {
   description = "ARN of the S3 bucket"
 }
 
-output "lambda_name" {
+output "article_generator_lambda_name" {
   value       = module.lambda_generator.lambda_name
-  description = "Name of the Lambda function"
+  description = "Name of the Article Generator Lambda function"
 }
 
-output "lambda_arn" {
+output "article_generator_lambda_arn" {
   value       = module.lambda_generator.lambda_arn
-  description = "ARN of the Lambda function"
+  description = "ARN of the Article Generator Lambda function"
+}
+
+output "rebuild_lambda_name" {
+  value       = module.docusaurus_rebuild.lambda_function_name
+  description = "Name of the Docusaurus rebuild Lambda function"
+}
+
+output "rebuild_lambda_arn" {
+  value       = module.docusaurus_rebuild.lambda_function_arn
+  description = "ARN of the Docusaurus rebuild Lambda function"
 }
 
 output "alb_dns_name" {

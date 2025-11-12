@@ -1,0 +1,11 @@
+{
+  "name": "docusaurus-rebuild",
+  "version": "1.0.0",
+  "description": "Lambda function to sync markdown files to Docusaurus",
+  "main": "index.js",
+  "dependencies": {
+    "@aws-sdk/client-cloudfront": "^3.0.0",
+    "@aws-sdk/client-codebuild": "^3.929.0",
+    "@aws-sdk/client-s3": "^3.0.0"
+  }
+}

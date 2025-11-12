@@ -38,7 +38,7 @@ variable "tags" {
 }
 
 variable "lambda_interval" {
-  description = "Interval in minutes for the Lambda function to run"
+  description = "Interval in minutes for the article generator Lambda function to run"
   type        = number
   default     = 2
 }
@@ -77,4 +77,16 @@ variable "backend_instance_count" {
   description = "Number of backend EC2 instances to create"
   type        = number
   default     = 2
+}
+
+variable "github_repo_url" {
+  description = "GitHub repository URL for the Docusaurus project"
+  type        = string
+  default = "https://github.com/juanifraga/infra-en-la-nube"
+}
+
+variable "github_branch" {
+  description = "GitHub branch to build from"
+  type        = string
+  default     = "main"
 }

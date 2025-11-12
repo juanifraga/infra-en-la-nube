@@ -1,0 +1,28 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo "Syncing markdown files from S3..."
+      - aws s3 sync s3://$SOURCE_BUCKET/ ./docs/ --exclude "*" --include "*.md"
+      - echo "Installing dependencies..."
+      - npm install
+
+  build:
+    commands:
+      - echo "Building Docusaurus site..."
+      - npm run build
+      - echo "Build completed on `date`"
+
+  post_build:
+    commands:
+      - echo "Deploying to S3..."
+      - aws s3 sync build/ s3://$DESTINATION_BUCKET/ --delete
+      - echo "Invalidating CloudFront cache..."
+      - aws cloudfront create-invalidation --distribution-id $CLOUDFRONT_DIST_ID --paths "/*"
+      - echo "Deployment completed successfully!"
+
+artifacts:
+  files:
+    - "**/*"
+  base-directory: build
