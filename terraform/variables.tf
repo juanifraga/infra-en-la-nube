@@ -24,11 +24,6 @@ variable "allowed_ssh_cidr" {
   # cámbialo
 }
 
-variable "docker_image" {
-  type    = string
-  default = "juanifraga/infra-en-la-nube:latest"
-}
-
 variable "tags" {
   type = map(string)
   default = {
