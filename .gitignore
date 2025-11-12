@@ -1,5 +1,5 @@
 # Dependencies
-/node_modules
+*/node_modules/*
 
 # Production
 /build
@@ -37,3 +37,4 @@ terraform.rc
 # Python Lambda dependencies (keep only the zip and source files)
 terraform/modules/lambda_generator/lambda/*
 !terraform/modules/lambda_generator/lambda/*.py
+node_modules
