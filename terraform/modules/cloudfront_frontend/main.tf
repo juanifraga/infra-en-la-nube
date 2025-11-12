@@ -8,6 +8,7 @@ resource "aws_s3_bucket" "frontend" {
     Tier      = "Presentation"
     ManagedBy = "Terraform"
   })
+  force_destroy = true 
 }
 
 resource "random_id" "bucket_suffix" {

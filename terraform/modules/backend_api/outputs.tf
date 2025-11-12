@@ -17,3 +17,13 @@ output "security_group_id" {
   description = "Security group ID for the backend EC2"
   value       = var.security_group_id
 }
+
+output "cloudwatch_log_group_name" {
+  description = "CloudWatch Log Group name for backend logs"
+  value       = aws_cloudwatch_log_group.backend_logs.name
+}
+
+output "cloudwatch_log_group_arn" {
+  description = "CloudWatch Log Group ARN for backend logs"
+  value       = aws_cloudwatch_log_group.backend_logs.arn
+}
