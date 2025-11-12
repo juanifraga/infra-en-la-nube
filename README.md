@@ -1,41 +1,34 @@
-# Website
+# Guía de Deploy
 
-This website is built using [Docusaurus](https://docusaurus.io/), a modern static website generator.
+## Prerequisitos
 
-## Installation
+- Credenciales de AWS (`~/.aws/credentials`)
+- Terraform instalado
 
-```bash
-yarn
-```
+## Deploy
 
-## Local Development
+### 1. Copiar variables de entorno
 
-```bash
-yarn start
-```
-
-This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
-
-## Build
+Copiar el archivo de variables de ejemplo y poner sus datos.
 
 ```bash
-yarn build
+cp terraform.tfvars.example terraform.tfvars
 ```
 
-This command generates static content into the `build` directory and can be served using any static contents hosting service.
-
-## Deployment
-
-Using SSH:
+### 2. Deployar infraestrctura
 
 ```bash
-USE_SSH=true yarn deploy
+cd terraform
+terraform init
+terraform apply
 ```
 
-Not using SSH:
+### 2. Deploy Frontend
 
 ```bash
-GIT_USER=<Your GitHub username> yarn deploy
+./deploy-to-s3.sh
 ```
 
-If you are using GitHub pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.
+## Access
+
+- **Frontend**: `https://<cloudfront-domain>` (se ve luego del deployment)
